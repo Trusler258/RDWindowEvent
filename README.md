@@ -9,6 +9,18 @@
 
 事件参数与 Rhythm Doctor 保持一致，支持中文与英文界面
 
+## 技术栈
+
+| <img src="assets/dotnet.svg" width="28" height="28" alt=".NET"><br>C# | <img src="assets/unity.svg" width="28" height="28" alt="Unity"><br>Unity | <img src="assets/windows.svg" width="28" height="28" alt="Windows"><br>Windows | <img src="assets/deepseek.svg" width="28" height="28" alt="DeepSeek"><br>DeepSeek |
+| :---: | :---: | :---: | :---: |
+| .NET Framework 4.8 | UnityModManager 0.32.5 | Win32 API | V4.1 Flash |
+
+> **与 7th Beat Games 的关系**
+>
+> 本项目是非官方社区模组，与 7th Beat Games 无隶属、授权或合作关系
+> Rhythm Doctor 及其窗口事件设计归 7th Beat Games 所有
+> 本项目不包含 Rhythm Doctor 的代码、图片或音频资源
+
 ## 功能
 
 ### Window Move
