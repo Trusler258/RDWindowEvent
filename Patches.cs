@@ -429,6 +429,16 @@ namespace RDWindowEvent
             }
         }
 
+        // 曲线编辑窗口获得鼠标时，暂停编辑器的鼠标拖拽和选轨行为。
+        [HarmonyPatch(typeof(scnEditor), "HandleMouseActions")]
+        internal static class CurveEditorInputPatch
+        {
+            private static bool Prefix()
+            {
+                return !CurveEditorWindow.BlocksGameInput;
+            }
+        }
+
         // 关卡重开或退出播放时恢复窗口。
         [HarmonyPatch(typeof(scrVfxPlus), "Reset")]
         internal static class VfxResetPatch

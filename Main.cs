@@ -72,11 +72,11 @@ namespace RDWindowEvent
             ? "注：位置和幅度使用屏幕百分比，原点在屏幕左下角"
             : "Note: position and amplitude use screen percentages, origin at the bottom-left of the screen";
         public static string ResizeNote => Chinese
-            ? "缩放倍数相对于基准分辨率：1 表示基准大小，2 表示两倍。"
-            : "Scale is relative to the base resolution: 1 is base size, 2 is double.";
+            ? "缩放倍数相对于基准分辨率：1 表示基准大小，2 表示两倍"
+            : "Scale is relative to the base resolution: 1 is base size, 2 is double";
         public static string CurveHint => Chinese
-            ? "点击右上角“编辑缓动曲线”，或按 Ctrl+Shift+E 编辑曲线。"
-            : "Click 'Edit Ease Curve' at the top-right, or press Ctrl+Shift+E.";
+            ? "点击右上角“编辑缓动曲线”，或按 Ctrl+Shift+E 编辑曲线"
+            : "Click 'Edit Ease Curve' at the top-right, or press Ctrl+Shift+E";
 
         public static string MoveLabel(string key)
         {
@@ -272,7 +272,7 @@ namespace RDWindowEvent
             config.RebaseOnResolutionChange = GUILayout.Toggle(config.RebaseOnResolutionChange,
                 "Rebase on resolution change / 分辨率变化时更新基准");
             GUILayout.Label("Language and menu style changes apply after restarting the game.\n" +
-                "语言和事件菜单风格更改后需重启游戏生效。");
+                "语言和事件菜单风格更改后需重启游戏生效");
 
             GUILayout.EndVertical();
         }
@@ -317,6 +317,7 @@ namespace RDWindowEvent
             Try(harmony, typeof(Patches.ApplyEventPatch));
             Try(harmony, typeof(Patches.PlayBaselinePatch));
             Try(harmony, typeof(Patches.LoadBaselinePatch));
+            Try(harmony, typeof(Patches.CurveEditorInputPatch));
             Try(harmony, typeof(Patches.VfxResetPatch));
         }
 

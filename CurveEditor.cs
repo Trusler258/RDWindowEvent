@@ -66,10 +66,29 @@ namespace RDWindowEvent
         private static Texture2D _white;
 
         private bool _open;
+        private bool _draggingWindow;
         private LevelEvent _event;
         private readonly List<Vector2> _points = new List<Vector2>();
         private int _dragIndex = -1;
         private Rect _windowRect = new Rect(180f, 80f, 520f, 380f);
+
+        // 供 Harmony 补丁查询，避免拖动曲线窗口时游戏编辑器跟着移动。
+        public static bool BlocksGameInput
+        {
+            get
+            {
+                if (_instance == null || !_instance._open)
+                {
+                    return false;
+                }
+                if (_instance._draggingWindow)
+                {
+                    return true;
+                }
+                var mouse = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+                return _instance._windowRect.Contains(mouse);
+            }
+        }
 
         public static void Ensure()
         {
@@ -90,13 +109,25 @@ namespace RDWindowEvent
 
         private void Update()
         {
-            if (!Application.isPlaying || !ADOBase.isLevelEditor)
+            if (!Application.isPlaying)
             {
                 return;
             }
-            var editor = ADOBase.editor;
-            if (editor == null)
+            if (!ADOBase.isLevelEditor)
             {
+                if (_open)
+                {
+                    Close();
+                }
+                return;
+            }
+            var editor = ADOBase.editor;
+            if (editor == null || ADOBase.controller == null || editor.playMode)
+            {
+                if (_open)
+                {
+                    Close();
+                }
                 return;
             }
             if (Localization.RdStyle)
@@ -151,6 +182,7 @@ namespace RDWindowEvent
         private void Close()
         {
             _open = false;
+            _draggingWindow = false;
             _event = null;
             _dragIndex = -1;
         }
@@ -185,13 +217,13 @@ namespace RDWindowEvent
 
         private void OnGUI()
         {
-            if (!Application.isPlaying)
+            if (!Application.isPlaying || !ADOBase.isLevelEditor)
             {
                 return;
             }
             EnsureWhite();
             var editor = ADOBase.editor;
-            if (editor == null)
+            if (editor == null || ADOBase.controller == null || editor.playMode)
             {
                 return;
             }
@@ -220,6 +252,16 @@ namespace RDWindowEvent
 
         private void DrawWindow(int id)
         {
+            var titleBar = new Rect(0f, 0f, _windowRect.width, 24f);
+            if (Event.current.type == EventType.MouseDown && titleBar.Contains(Event.current.mousePosition))
+            {
+                _draggingWindow = true;
+            }
+            else if (Event.current.type == EventType.MouseUp)
+            {
+                _draggingWindow = false;
+            }
+
             var area = new Rect(24f, 34f, _windowRect.width - 48f, _windowRect.height - 106f);
             DrawGrid(area);
             DrawCurve(area);
@@ -243,7 +285,7 @@ namespace RDWindowEvent
 
             GUI.Label(new Rect(354f, _windowRect.height - 52f, 150f, 20f), "Double-click: add");
             GUI.Label(new Rect(354f, _windowRect.height - 34f, 150f, 20f), "Right-click: remove");
-            GUI.DragWindow(new Rect(0f, 0f, _windowRect.width, 24f));
+            GUI.DragWindow(titleBar);
         }
 
         private void DrawGrid(Rect area)
