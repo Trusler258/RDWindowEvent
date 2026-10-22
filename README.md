@@ -147,4 +147,4 @@ MIT License，详见 [LICENSE](LICENSE)
 - Rhythm Doctor 的窗口事件设计来自 7th Beat Games
 - 本项目为独立实现的 ADOFAI 移植版本，不包含 Rhythm Doctor 的代码或资源
 
-<sub><span style="color:#808080">当前版本：Beta v0.1.0 · Trusler &amp; DeepSeek V4.1 Flash</span></sub>
+<img src="https://raw.githubusercontent.com/Trusler258/RDWindowEvent/main/assets/credit.svg" width="420" alt="当前版本：Beta v0.1.0 · Trusler &amp; DeepSeek V4.1 Flash">
