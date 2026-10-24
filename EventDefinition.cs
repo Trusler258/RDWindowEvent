@@ -58,12 +58,10 @@ namespace RDWindowEvent
     {
         public const string EventName = "WindowMove";
         public const string ResizeEventName = "WindowResize";
+        public const string ModId = "RDWindowEvent";
 
-        // ADOFAI 的事件类型枚举不可扩展，这里借用 MiscSettings 作为移动事件的载体。
-        // 该类型不会出现在关卡的 floor 事件里，只被本模组的自定义事件使用。
-        public const LevelEventType Carrier = LevelEventType.MiscSettings;
-
-        // 缩放事件使用枚举范围外的值，并通过 Decode/Encode 映射为 WindowResize。
+        // ADOFAI 的事件类型枚举不可扩展，两个自定义事件都使用枚举范围外的值。
+        public const LevelEventType Carrier = (LevelEventType)101;
         public const LevelEventType ResizeCarrier = (LevelEventType)100;
 
         private static LevelEventInfo _info;
@@ -166,12 +164,17 @@ namespace RDWindowEvent
             all[Carrier.ToString()] = Info;
             all[ResizeCarrier.ToString()] = ResizeInfo;
             // LevelEvent 的构造函数会用这个字典把自定义枚举值转换成事件名。
-            if (GCS.levelEventTypeString != null && !GCS.levelEventTypeString.ContainsKey(ResizeCarrier))
+            if (GCS.levelEventTypeString != null)
             {
-                GCS.levelEventTypeString[ResizeCarrier] = ResizeCarrier.ToString();
+                if (!GCS.levelEventTypeString.ContainsKey(Carrier))
+                {
+                    GCS.levelEventTypeString[Carrier] = Carrier.ToString();
+                }
+                if (!GCS.levelEventTypeString.ContainsKey(ResizeCarrier))
+                {
+                    GCS.levelEventTypeString[ResizeCarrier] = ResizeCarrier.ToString();
+                }
             }
-            // 允许同一格子上存在多个窗口事件时使用页签的左右切换按钮。
-            EditorConstants.settingsTypes?.Remove(Carrier);
             if (!_installedLogged)
             {
                 _installedLogged = true;
@@ -179,6 +182,22 @@ namespace RDWindowEvent
                     ResizeInfo.propertiesInfo.Count + "，可见属性: " + CountVisible(Info) + "/" +
                     CountVisible(ResizeInfo) + "，菜单风格: " + (Localization.RdStyle ? "RD" : "Modern"));
             }
+        }
+
+        public static void Uninstall()
+        {
+            var all = GCS.levelEventsInfo;
+            if (all != null)
+            {
+                all.Remove(Carrier.ToString());
+                all.Remove(ResizeCarrier.ToString());
+            }
+            if (GCS.levelEventTypeString != null)
+            {
+                GCS.levelEventTypeString.Remove(Carrier);
+                GCS.levelEventTypeString.Remove(ResizeCarrier);
+            }
+            _installedLogged = false;
         }
 
         public static List<string> GetEnumLabels(string enumTypeString)

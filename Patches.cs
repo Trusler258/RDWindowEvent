@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ADOFAI;
 using ADOFAI.LevelEditor.Controls;
 using HarmonyLib;
@@ -429,6 +430,52 @@ namespace RDWindowEvent
             }
         }
 
+        // 保存时自动声明对本模组的依赖，缺少模组时游戏会显示 ModRequired 而不是解析自定义事件。
+        [HarmonyPatch(typeof(LevelData), "Encode")]
+        internal static class EnsureRequiredModsPatch
+        {
+            private static void Prefix(LevelData __instance)
+            {
+                if (__instance == null || __instance.levelSettings == null || __instance.levelEvents == null)
+                {
+                    return;
+                }
+                bool hasOurs = false;
+                foreach (var ev in __instance.levelEvents)
+                {
+                    if (ev != null && ev.info != null && IsOurInfo(ev.info))
+                    {
+                        hasOurs = true;
+                        break;
+                    }
+                }
+                if (!hasOurs)
+                {
+                    return;
+                }
+                var mods = (__instance.levelSettings["requiredMods"] as object[])?.ToList() ?? new List<object>();
+                if (!mods.Any(m => m as string == EventDefinition.ModId))
+                {
+                    mods.Add(EventDefinition.ModId);
+                }
+                __instance.levelSettings["requiredMods"] = mods.ToArray();
+            }
+        }
+
+        [HarmonyPatch(typeof(RDEditorUtils), "CheckModsDependency")]
+        internal static class ModsDependencyPatch
+        {
+            private static bool Prefix(object[] mods, ref bool __result)
+            {
+                if (mods != null && mods.Any(m => m as string == EventDefinition.ModId))
+                {
+                    __result = false;
+                    return false;
+                }
+                return true;
+            }
+        }
+
         // 曲线编辑窗口获得鼠标时，暂停编辑器的鼠标拖拽和选轨行为。
         [HarmonyPatch(typeof(scnEditor), "HandleMouseActions")]
         internal static class CurveEditorInputPatch
@@ -539,6 +586,11 @@ namespace RDWindowEvent
                     __result = Localization.ResizeTitle;
                     return false;
                 }
+                if (key == "editor." + (int)EventDefinition.Carrier)
+                {
+                    __result = Localization.MoveTitle;
+                    return false;
+                }
                 if (key == "wm.note.move")
                 {
                     __result = Localization.MoveNote;
@@ -555,6 +607,50 @@ namespace RDWindowEvent
                     return false;
                 }
                 return true;
+            }
+        }
+
+        internal static void Uninstall(scnEditor editor)
+        {
+            if (editor == null)
+            {
+                return;
+            }
+            if (editor.eventButtons != null &&
+                editor.eventButtons.TryGetValue(CustomCategory, out var buttons) && buttons != null)
+            {
+                foreach (var button in buttons)
+                {
+                    if (button != null)
+                    {
+                        UnityEngine.Object.Destroy(button.gameObject);
+                    }
+                }
+                buttons.Clear();
+                editor.eventButtons.Remove(CustomCategory);
+            }
+            var tabsField = AccessTools.Field(typeof(scnEditor), "categoryTabs");
+            var tabs = tabsField?.GetValue(editor) as List<CategoryTab>;
+            if (tabs != null)
+            {
+                for (int i = tabs.Count - 1; i >= 0; i--)
+                {
+                    var tab = tabs[i];
+                    if (tab == null)
+                    {
+                        tabs.RemoveAt(i);
+                        continue;
+                    }
+                    if (tab.levelEventCategory == CustomCategory)
+                    {
+                        UnityEngine.Object.Destroy(tab.gameObject);
+                        tabs.RemoveAt(i);
+                    }
+                }
+            }
+            if (editor.currentCategory == CustomCategory)
+            {
+                editor.SetCategory(LevelEventCategory.Favorites);
             }
         }
 

@@ -137,11 +137,11 @@ dotnet build -c Release -p:GameDir="游戏目录"
 ## 实现说明
 
 - ADOFAI 的 `LevelEventType` 枚举不可扩展
-- `Window Move` 借用 `MiscSettings` 作为序列化载体，通过 Harmony 在 `LevelEvent.Decode/Encode` 中映射为 `WindowMove`
-- `Window Resize` 使用枚举范围外的值 `100`，同样通过 Decode/Encode 映射为 `WindowResize`
+- `Window Move` 使用枚举范围外的值 `101`，`Window Resize` 使用 `100`
+- 保存时自动写入 `requiredMods`，缺少模组时由游戏提示需要第三方模组
 - 窗口操作使用 Win32 `SetWindowPos`，由 `WindowDanceController` 每帧计算目标位置与尺寸
 - 分类页签、事件按钮、检查器面板、事件图标均通过 Harmony 补丁接入编辑器
-- 不修改原生 MiscSettings 数据，避免与其他模组冲突
+- 不覆盖原生 MiscSettings 事件定义，避免影响原版事件
 
 ## 已知限制
 

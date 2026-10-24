@@ -206,6 +206,8 @@ namespace RDWindowEvent
     {
         internal static UnityModManager.ModEntry.ModLogger Log;
         internal static ModConfig Config;
+        private static Harmony _harmony;
+        private static bool _enabled;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -216,11 +218,16 @@ namespace RDWindowEvent
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnHideGUI = e => Config.Save(e);
                 modEntry.OnSaveGUI = e => Config.Save(e);
+                modEntry.OnToggle = OnToggle;
+                modEntry.OnUnload = OnUnload;
 
-                var harmony = new Harmony(modEntry.Info.Id);
-                PatchManager.Apply(harmony);
+                _harmony = new Harmony(modEntry.Info.Id);
+                PatchManager.Apply(_harmony);
+                // 如果模组是在游戏启动后才启用，事件表可能已经初始化，需要补一次注入。
+                EventDefinition.Install();
                 WindowDanceController.Ensure();
                 CurveEditorWindow.Ensure();
+                _enabled = true;
                 Log.Log("RDWindowEvent 已加载。");
             }
             catch (Exception ex)
@@ -229,6 +236,52 @@ namespace RDWindowEvent
                 return false;
             }
             return true;
+        }
+
+        private static bool OnToggle(UnityModManager.ModEntry modEntry, bool active)
+        {
+            if (active)
+            {
+                if (!_enabled)
+                {
+                    _harmony = new Harmony(modEntry.Info.Id);
+                    PatchManager.Apply(_harmony);
+                    EventDefinition.Install();
+                    WindowDanceController.Ensure();
+                    CurveEditorWindow.Ensure();
+                    _enabled = true;
+                    Log?.Log("RDWindowEvent 已启用。");
+                }
+            }
+            else if (_enabled)
+            {
+                Disable(modEntry);
+            }
+            return true;
+        }
+
+        private static bool OnUnload(UnityModManager.ModEntry modEntry)
+        {
+            if (_enabled)
+            {
+                Disable(modEntry);
+            }
+            return true;
+        }
+
+        private static void Disable(UnityModManager.ModEntry modEntry)
+        {
+            WindowDanceController.Shutdown();
+            CurveEditorWindow.Shutdown();
+            EventDefinition.Uninstall();
+            if (ADOBase.editor != null)
+            {
+                CustomCategoryIntegration.Uninstall(ADOBase.editor);
+            }
+            _harmony?.UnpatchAll(modEntry.Info.Id);
+            _harmony = null;
+            _enabled = false;
+            Log?.Log("RDWindowEvent 已停用。");
         }
 
         private static void OnGUI(UnityModManager.ModEntry modEntry)
@@ -329,6 +382,8 @@ namespace RDWindowEvent
             Try(harmony, typeof(Patches.ListItemEventPatch));
             Try(harmony, typeof(Patches.EnumSetupPatch));
             Try(harmony, typeof(Patches.ApplyEventPatch));
+            Try(harmony, typeof(Patches.EnsureRequiredModsPatch));
+            Try(harmony, typeof(Patches.ModsDependencyPatch));
             Try(harmony, typeof(Patches.PlayBaselinePatch));
             Try(harmony, typeof(Patches.LoadBaselinePatch));
             Try(harmony, typeof(Patches.CurveEditorInputPatch));

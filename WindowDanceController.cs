@@ -40,6 +40,16 @@ namespace RDWindowEvent
             }
         }
 
+        public static void Shutdown()
+        {
+            if (_instance != null)
+            {
+                _instance.ResetSession();
+                Object.Destroy(_instance.gameObject);
+                _instance = null;
+            }
+        }
+
         public static void PrepareForPlay(IEnumerable<LevelEvent> events)
         {
             if (events == null)

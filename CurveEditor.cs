@@ -67,6 +67,7 @@ namespace RDWindowEvent
 
         private bool _open;
         private bool _draggingWindow;
+        private Rect _buttonRect = new Rect(-1000f, -1000f, 0f, 0f);
         private LevelEvent _event;
         private readonly List<Vector2> _points = new List<Vector2>();
         private int _dragIndex = -1;
@@ -77,16 +78,31 @@ namespace RDWindowEvent
         {
             get
             {
-                if (_instance == null || !_instance._open)
+                if (_instance == null)
                 {
                     return false;
                 }
-                if (_instance._draggingWindow)
-                {
-                    return true;
-                }
                 var mouse = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
-                return _instance._windowRect.Contains(mouse);
+                if (_instance._open)
+                {
+                    if (_instance._draggingWindow)
+                    {
+                        return true;
+                    }
+                    return _instance._windowRect.Contains(mouse);
+                }
+                if (!Application.isPlaying || !ADOBase.isLevelEditor || ADOBase.controller == null)
+                {
+                    return false;
+                }
+                var editor = ADOBase.editor;
+                if (editor == null || editor.playMode)
+                {
+                    return false;
+                }
+                var selected = editor.levelEventsPanel != null ? editor.levelEventsPanel.selectedEvent : null;
+                bool ours = selected != null && selected.info != null && EventDefinition.IsOurInfo(selected.info);
+                return ours && _instance._buttonRect.Contains(mouse);
             }
         }
 
@@ -105,6 +121,15 @@ namespace RDWindowEvent
         {
             Ensure();
             _instance?.Open();
+        }
+
+        public static void Shutdown()
+        {
+            if (_instance != null)
+            {
+                Object.Destroy(_instance.gameObject);
+                _instance = null;
+            }
         }
 
         private void Update()
@@ -234,10 +259,10 @@ namespace RDWindowEvent
             }
             var selected = editor.levelEventsPanel.selectedEvent;
             bool ours = selected != null && selected.info != null && EventDefinition.IsOurInfo(selected.info);
+            _buttonRect = new Rect(Screen.width - 270f, 8f, 260f, 28f);
             if (!_open && ours)
             {
-                if (GUI.Button(new Rect(Screen.width - 270f, 8f, 260f, 28f),
-                    "Edit Ease Curve (Ctrl+Shift+E)"))
+                if (GUI.Button(_buttonRect, "Edit Ease Curve (Ctrl+Shift+E)"))
                 {
                     Open();
                 }
