@@ -64,7 +64,7 @@
 ## 安装
 
 1. 安装 UnityModManager
-2. 下载 Release 中的 `RDWindowEvent-0.1.0-beta.zip`
+2. 下载 Release 中的 `RDWindowEvent-0.1.1-beta.zip`
 3. 解压到游戏的 `Mods` 目录，确保路径为：
 
 ```text
@@ -160,4 +160,4 @@ MIT License，详见 [LICENSE](LICENSE)
 - Rhythm Doctor 的窗口事件设计来自 7th Beat Games
 - 本项目为独立实现的 ADOFAI 移植版本，不包含 Rhythm Doctor 的代码或资源
 
-<img src="https://raw.githubusercontent.com/Trusler258/RDWindowEvent/main/assets/credit.svg" width="420" alt="当前版本：Beta v0.1.0 · Trusler &amp; DeepSeek V4.1 Flash">
+<img src="https://raw.githubusercontent.com/Trusler258/RDWindowEvent/main/assets/credit.svg" width="420" alt="当前版本：Beta v0.1.1 · Trusler &amp; DeepSeek V4.1 Flash">
