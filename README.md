@@ -90,6 +90,7 @@ A Dance of Fire and Ice/Mods/RDWindowEvent/Info.json
 | Resize Base | 关卡开始时的窗口尺寸 / 固定分辨率 |
 | Base Width / Base Height | 固定分辨率基准 |
 | Rebase On Resolution Change | 游戏内改分辨率后更新缩放基准 |
+| Min Window | 最小窗口尺寸，默认 704x396（取自 Rhythm Doctor） |
 
 语言和事件菜单风格修改后需要重启游戏
 

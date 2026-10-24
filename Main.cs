@@ -32,6 +32,8 @@ namespace RDWindowEvent
         public ResizeBaseMode ResizeBase = ResizeBaseMode.WindowAtLevelStart;
         public int BaseWidth = 1920;
         public int BaseHeight = 1080;
+        public int MinWidth = 704;
+        public int MinHeight = 396;
         public bool RebaseOnResolutionChange = true;
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -271,6 +273,18 @@ namespace RDWindowEvent
 
             config.RebaseOnResolutionChange = GUILayout.Toggle(config.RebaseOnResolutionChange,
                 "Rebase on resolution change / 分辨率变化时更新基准");
+
+            GUILayout.Space(6f);
+            GUILayout.Label("Min Window / 最小窗口", GUILayout.ExpandWidth(false));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Width", GUILayout.Width(50f));
+            config.MinWidth = ParseInt(GUILayout.TextField(config.MinWidth.ToString(),
+                GUILayout.Width(70f)), config.MinWidth);
+            GUILayout.Label("Height", GUILayout.Width(55f));
+            config.MinHeight = ParseInt(GUILayout.TextField(config.MinHeight.ToString(),
+                GUILayout.Width(70f)), config.MinHeight);
+            GUILayout.EndHorizontal();
+
             GUILayout.Label("Language and menu style changes apply after restarting the game.\n" +
                 "语言和事件菜单风格更改后需重启游戏生效");
 

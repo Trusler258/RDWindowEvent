@@ -93,6 +93,7 @@ namespace RDWindowEvent
 
         private bool _resizing;
         private bool _resizeApplied;
+        private bool _resizeOwnsWindow;
         private float _resizeElapsed;
         private float _resizeDuration;
         private Ease _resizeEase = Ease.Linear;
@@ -305,7 +306,7 @@ namespace RDWindowEvent
             {
                 ApplyResizeFrame();
             }
-            if (_hasState)
+            if (_hasState && !_resizeOwnsWindow)
             {
                 ApplyCenter(ComputeCenter());
             }
@@ -370,15 +371,9 @@ namespace RDWindowEvent
                 return;
             }
 
-            // 移动动画结束后由缩放事件接管窗口，避免每帧的居中逻辑覆盖锚点缩放。
-            if (_preset == Preset.Move)
-            {
-                float moveT = _moveDuration <= 0f ? 1f : _moveElapsed / _moveDuration;
-                if (moveT >= 1f)
-                {
-                    _hasState = false;
-                }
-            }
+            // 缩放事件接管窗口位置，避免移动状态与锚点缩放互相覆盖造成抖动。
+            _hasState = false;
+            _resizeOwnsWindow = true;
 
             float baseWidth;
             float baseHeight;
@@ -397,9 +392,16 @@ namespace RDWindowEvent
             scaleX = Mathf.Clamp(scaleX, 0.1f, 2f);
             scaleY = Mathf.Clamp(scaleY, 0.1f, 2f);
 
+            // Rhythm Doctor 的窗口舞蹈最小尺寸为 704x396（16:9）。
+            // 这里允许在 UMM 中覆盖，并确保最小尺寸不会超过基准尺寸。
+            int configuredMinWidth = Main.Config != null && Main.Config.MinWidth > 0 ? Main.Config.MinWidth : 704;
+            int configuredMinHeight = Main.Config != null && Main.Config.MinHeight > 0 ? Main.Config.MinHeight : 396;
+            float minWidth = Mathf.Clamp(configuredMinWidth, 1, Mathf.Max(1, Mathf.RoundToInt(baseWidth)));
+            float minHeight = Mathf.Clamp(configuredMinHeight, 1, Mathf.Max(1, Mathf.RoundToInt(baseHeight)));
+
             _resizeFrom = current;
-            _resizeToWidth = Mathf.Max(1, Mathf.RoundToInt(baseWidth * scaleX));
-            _resizeToHeight = Mathf.Max(1, Mathf.RoundToInt(baseHeight * scaleY));
+            _resizeToWidth = Mathf.Max(Mathf.RoundToInt(minWidth), Mathf.RoundToInt(baseWidth * scaleX));
+            _resizeToHeight = Mathf.Max(Mathf.RoundToInt(minHeight), Mathf.RoundToInt(baseHeight * scaleY));
             _resizeDuration = Mathf.Max(0f, effect.durationBeats) * Mathf.Max(effect.crotchet, 0.0001f);
             _resizeElapsed = 0f;
             _resizeEase = effect.ease;
@@ -568,6 +570,9 @@ namespace RDWindowEvent
 
             float crotchet = Mathf.Max(effect.crotchet, 0.0001f);
             float duration = Mathf.Max(0f, effect.durationBeats) * crotchet;
+
+            // 后续移动事件重新接管窗口位置。
+            _resizeOwnsWindow = false;
 
             var target = ToPreset(effect.preset);
             bool samePreset = _hasState && _preset == target;
@@ -899,6 +904,7 @@ namespace RDWindowEvent
             _pendingResize = null;
             _resizing = false;
             _resizeApplied = false;
+            _resizeOwnsWindow = false;
             _resizeElapsed = 0f;
             _warnedMaximized = false;
         }
